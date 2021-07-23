@@ -23,7 +23,7 @@
 
 - (void) startAddPaymentPass:(CDVInvokedUrlCommand*)command;
 - (void) completeAddPaymentPass:(CDVInvokedUrlCommand*)command;
-
+- (void) completeCardActivation:(CDVInvokedUrlCommand*)command;
 
 @end
 
