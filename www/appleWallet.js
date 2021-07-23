@@ -142,6 +142,25 @@ var AppleWallet = {
             }, PLUGIN_NAME, 'completeAddPaymentPass', [encCardData]);
         });
     },
+
+    /**
+     * @function checkActivation
+     * @description a function to determine if there is some card in requiresActivation status
+     * @param {Function} [successCallback] - Optional success callback, recieves message object.
+     * @param {Function} [errorCallback] - Optional error callback, recieves message object.
+     * @returns {Promise<string[]>} - Check if there is card in status requiresActivation for in app validation 
+     */
+    checkActivation: function(successCallback, errorCallback) {
+        return new Promise(function(resolve, reject) {
+            exec(function(message) {
+                executeCallback(successCallback, message);
+                resolve(message);
+            }, function(message) {
+                executeCallback(errorCallback, message);
+                reject(message);
+            }, PLUGIN_NAME, 'checkActivation', []);
+        });
+    },
 }
 
 module.exports = AppleWallet;
