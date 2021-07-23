@@ -171,7 +171,7 @@ var AppleWallet = {
      * @param {Function} [errorCallback] - Optional error callback, recieves message object.
      * @returns {Promise<boolean>} - boolean value to show if card activation was successfull or not
      */
-    completeCardActivation: function(cardSuffix, activationData successCallback, errorCallback) {
+    completeCardActivation: function(cardSuffix, activationData, successCallback, errorCallback) {
         return new Promise(function(resolve, reject) {
             exec(function(message) {
                 executeCallback(successCallback, message);
