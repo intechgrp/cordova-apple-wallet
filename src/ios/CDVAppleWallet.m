@@ -558,24 +558,26 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
         NSLog(@"PaymentPassActivationAvailable is NOT available");
     }*/
     
-    CDVPluginResult *pluginResult;
-    if (@available(iOS 13.5, *)) {
+    __block CDVPluginResult *pluginResult;
+    if (@available(iOS 13.5, *)) { // PKPassTypePayment is deprecated in iOS 13.5
         [passLibrary activateSecureElementPass:selectedCard withActivationData:activationData completion:^(BOOL success, NSError * _Nullable error) {
             if (success) {
-                pluginResult= [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"success"];
+                pluginResult =[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"success"];
             } else{
-                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error"];
+                pluginResult =[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error"];
             }
         }];
     } else {
         [passLibrary activatePaymentPass:selectedCardOld withActivationData:activationData completion:^(BOOL success, NSError * _Nonnull error) {
             if (success) {
-                pluginResult= [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"success"];
+                pluginResult =[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"success"];
             } else{
-                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error"];
+                pluginResult =[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error"];
             }
         }];
     }
+    
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (NSData *)HexToNSData:(NSString *)hexString
