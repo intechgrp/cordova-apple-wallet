@@ -16,6 +16,7 @@
 - (void) isAvailable:(CDVInvokedUrlCommand*)command;
 - (void) checkCardEligibility:(CDVInvokedUrlCommand*)command;
 - (void) checkCardEligibilityBySuffix:(CDVInvokedUrlCommand*)command;
+- (void) checkActivation:(CDVInvokedUrlCommand*)command;
 
 - (void) checkPairedDevices:(CDVInvokedUrlCommand*)command;
 - (void) checkPairedDevicesBySuffix:(CDVInvokedUrlCommand*)command;
