@@ -178,7 +178,7 @@ var AppleWallet = {
             }, function(message) {
                 executeCallback(errorCallback, message);
                 reject(message);
-            }, PLUGIN_NAME, 'completeCardActivation', []);
+            }, PLUGIN_NAME, 'completeCardActivation', [cardValidationActivationData]);
         });
     },
 }
