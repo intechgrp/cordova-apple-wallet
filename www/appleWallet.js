@@ -165,13 +165,12 @@ var AppleWallet = {
     /**
      * @function completeCardActivation
      * @description a function to make the in app validation flow (starts in wallet, goes to app)
-     * @param {String} [cardSuffix] - The card number suffix ex: last 4 or 6 digits
-     * @param {Object} [activationData] - card activation data
+     * @param {Object} [cardValidationActivationData] - an object implements CardValidationActivationData interface
      * @param {Function} [successCallback] - Optional success callback, recieves message object.
      * @param {Function} [errorCallback] - Optional error callback, recieves message object.
      * @returns {Promise<boolean>} - boolean value to show if card activation was successfull or not
      */
-    completeCardActivation: function(cardSuffix, activationData, successCallback, errorCallback) {
+    completeCardActivation: function(cardValidationActivationData, successCallback, errorCallback) {
         return new Promise(function(resolve, reject) {
             exec(function(message) {
                 executeCallback(successCallback, message);
