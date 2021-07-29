@@ -499,11 +499,42 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
     
     PKSecureElementPass * selectedCard;
     PKPaymentPass * selectedCardOld;
+    __block CDVPluginResult *pluginResult;
+    
+    if ([PKPassLibrary isPassLibraryAvailable]) {
+        NSLog(@"PkPassLibrary is available");
+    }else {
+        NSLog(@"PkPassLibrary is NOT available");
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"PkPassLibrary is NOT available"];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        return;
+    }
     
     PKPassLibrary *passLibrary = [[PKPassLibrary alloc] init];
+
+    if (@available(iOS 13.5, *)) {
+        if ([passLibrary isSecureElementPassActivationAvailable]) {
+            NSLog(@"PaymentPassActivationAvailable is available (ios13.5>)");
+        } else {
+            NSLog(@"PaymentPassActivationAvailable is NOT available (ios13.5>)");
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"PaymentPassActivationAvailable is NOT available (ios13.5>)"];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            return;
+        }
+    } else {
+        if ([passLibrary isPaymentPassActivationAvailable]) {
+            NSLog(@"PaymentPassActivationAvailable is available (ios13.5<)");
+        } else {
+            NSLog(@"PaymentPassActivationAvailable is NOT available (ios13.5<)";
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"PaymentPassActivationAvailable is NOT available (ios13.5<)"];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            return;
+        }
+    }
+    
     NSArray *paymentPasses = [[NSArray alloc] init];
     if (@available(iOS 13.5, *)) {
-      paymentPasses = [passLibrary passesOfType: PKPassTypeSecureElement];
+        paymentPasses = [passLibrary passesOfType: PKPassTypeSecureElement];
         for (PKPass *pass in paymentPasses) {
             PKSecureElementPass *paymentPass = [pass secureElementPass];
             if ([[paymentPass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
@@ -511,7 +542,7 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
             }
         }
     } else {
-      paymentPasses = [passLibrary passesOfType: PKPassTypePayment];
+        paymentPasses = [passLibrary passesOfType: PKPassTypePayment];
         for (PKPass *pass in paymentPasses) {
           PKPaymentPass * paymentPass = [pass paymentPass];
           if([[paymentPass primaryAccountNumberSuffix] isEqualToString:cardSuffix]){
@@ -526,39 +557,25 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
         [session activateSession];
         
         if ([session isPaired]) { // Check if the iPhone is paired with the Apple Watch
-          if (@available(iOS 13.5, *)) { // remotePaymentPasses is deprecated in iOS 13.5
-            paymentPasses = [passLibrary remoteSecureElementPasses];
-            for (PKSecureElementPass *pass in paymentPasses) {
-              if ([[pass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
-                  selectedCard = pass;
-              }
-            }
-          } else {
-            paymentPasses = [passLibrary remotePaymentPasses];
-            for (PKPass *pass in paymentPasses) {
-              PKPaymentPass * paymentPass = [pass paymentPass];
-                if([[paymentPass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
-                    selectedCardOld = paymentPass;
+            if (@available(iOS 13.5, *)) { // remotePaymentPasses is deprecated in iOS 13.5
+                paymentPasses = [passLibrary remoteSecureElementPasses];
+                for (PKSecureElementPass *pass in paymentPasses) {
+                    if ([[pass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
+                        selectedCard = pass;
+                    }
+                }
+            } else {
+                paymentPasses = [passLibrary remotePaymentPasses];
+                for (PKPass *pass in paymentPasses) {
+                    PKPaymentPass * paymentPass = [pass paymentPass];
+                    if([[paymentPass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
+                        selectedCardOld = paymentPass;
+                    }
                 }
             }
-
-          }
         }
     }
     
-    /*if ([PKPassLibrary isPassLibraryAvailable]) {
-        NSLog(@"PkPassLibrary is available");
-    }else {
-        NSLog(@"PkPassLibrary is NOT available");
-    }
-
-    if ([PKPassLibrary isPaymentPassActivationAvailable]) {
-        NSLog(@"PaymentPassActivationAvailable is available");
-    }else {
-        NSLog(@"PaymentPassActivationAvailable is NOT available");
-    }*/
-    
-    __block CDVPluginResult *pluginResult;
     if (@available(iOS 13.5, *)) { // PKPassTypePayment is deprecated in iOS 13.5
         [passLibrary activateSecureElementPass:selectedCard withActivationData:activationData completion:^(BOOL success, NSError * _Nullable error) {
             if (success) {
@@ -566,6 +583,7 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
             } else{
                 pluginResult =[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error"];
             }
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }];
     } else {
         [passLibrary activatePaymentPass:selectedCardOld withActivationData:activationData completion:^(BOOL success, NSError * _Nonnull error) {
@@ -574,10 +592,9 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
             } else{
                 pluginResult =[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error"];
             }
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }];
     }
-    
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (NSData *)HexToNSData:(NSString *)hexString
