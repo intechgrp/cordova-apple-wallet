@@ -525,7 +525,7 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
         if ([passLibrary isPaymentPassActivationAvailable]) {
             NSLog(@"PaymentPassActivationAvailable is available (ios13.5<)");
         } else {
-            NSLog(@"PaymentPassActivationAvailable is NOT available (ios13.5<)";
+            NSLog(@"PaymentPassActivationAvailable is NOT available (ios13.5<)");
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"PaymentPassActivationAvailable is NOT available (ios13.5<)"];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             return;
@@ -577,19 +577,19 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
     }
     
     //If nil check is needed
-    /*if (@available(iOS 13.5, *)) {
+    if (@available(iOS 13.5, *)) {
         if (selectedCard == nil) {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error"];
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error: selectedCard is nill"];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             return;
         }
     } else {
         if (selectedCardOld == nil) {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error"];`
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error: selectedCard is nill"];`
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             return;
         }
-    }*/
+    }
     
     if (@available(iOS 13.5, *)) { // PKPassTypePayment is deprecated in iOS 13.5
         [passLibrary activateSecureElementPass:selectedCard withActivationData:activationData completion:^(BOOL success, NSError * _Nullable error) {
