@@ -576,6 +576,21 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
         }
     }
     
+    //If nil check is needed
+    /*if (@available(iOS 13.5, *)) {
+        if (selectedCard == nil) {
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error"];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            return;
+        }
+    } else {
+        if (selectedCardOld == nil) {
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error"];`
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            return;
+        }
+    }*/
+    
     if (@available(iOS 13.5, *)) { // PKPassTypePayment is deprecated in iOS 13.5
         [passLibrary activateSecureElementPass:selectedCard withActivationData:activationData completion:^(BOOL success, NSError * _Nullable error) {
             if (success) {
