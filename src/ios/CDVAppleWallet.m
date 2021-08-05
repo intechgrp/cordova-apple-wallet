@@ -585,7 +585,7 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
         }
     } else {
         if (selectedCardOld == nil) {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error: selectedCard is nill"];`
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error: selectedCard is nill"];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             return;
         }
