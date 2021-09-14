@@ -181,6 +181,26 @@ var AppleWallet = {
             }, PLUGIN_NAME, 'completeCardActivation', [cardValidationActivationData]);
         });
     },
+
+    /**
+     * @function openWalletOnPassBySuffix
+     * @description open the Apple Wallet application on the pass url. (the pass is found by suffix)
+     * @param {String} [cardSuffix] - The card suffix of the related pass
+     * @param {Function} [successCallback] - Optional success callback, recieves message object.
+     * @param {Function} [errorCallback] - Optional error callback, recieves message object.
+     * @returns {Promise<boolean>} - boolean value to show if the wallet open properly
+     */
+     openWalletOnPassBySuffix: function(cardSuffix, successCallback, errorCallback) {
+        return new Promise(function(resolve, reject) {
+            exec(function(message) {
+                executeCallback(successCallback, message);
+                resolve(message);
+            }, function(message) {
+                executeCallback(errorCallback, message);
+                reject(message);
+            }, PLUGIN_NAME, 'openWalletOnPassBySuffix', [cardSuffix]);
+        });
+    },
 }
 
 module.exports = AppleWallet;

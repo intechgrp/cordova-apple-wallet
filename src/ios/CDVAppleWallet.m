@@ -629,6 +629,30 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
     return commandToSend;
 }
 
+- (void) openWalletOnPassBySuffix:(CDVInvokedUrlCommand *)command {
+    NSString * cardSuffix = [command.arguments objectAtIndex:0];
+
+    PKPassLibrary *passLibrary = [[PKPassLibrary alloc] init];
+    NSArray *paymentPasses = [[NSArray alloc] init];
+    if (@available(iOS 13.5, *)) { // PKPassTypePayment is deprecated in iOS13.5
+      paymentPasses = [passLibrary passesOfType: PKPassTypeSecureElement];
+      for (PKPass *pass in paymentPasses) {
+        PKSecureElementPass *paymentPass = [pass secureElementPass];
+        if ([[paymentPass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
+            [[UIApplication sharedApplication] openURL:[pass passURL]]
+        }
+      }
+    } else {
+      paymentPasses = [passLibrary passesOfType: PKPassTypePayment];
+      for (PKPass *pass in paymentPasses) {
+        PKPaymentPass *paymentPass = [pass paymentPass];
+        if([[paymentPass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
+            [[UIApplication sharedApplication] openURL:[pass passURL]]
+        }
+      }
+    }
+}
+
 @end
 
 // in this case, it is handling if it found 2 watches (more than 1 remote device) 
