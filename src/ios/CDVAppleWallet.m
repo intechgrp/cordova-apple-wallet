@@ -197,7 +197,7 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
       paymentPasses = [passLibrary passesOfType: PKPassTypePayment];
       for (PKPass *pass in paymentPasses) {
         PKPaymentPass *paymentPass = [pass paymentPass];
-        if([paymentPass passActivationState] == PKSecureElementPassActivationStateRequiresActivation) {
+        if([paymentPass activationState] == PKPaymentPassActivationStateRequiresActivation) {
             [dictionary setValue:[NSNumber numberWithBool:0] forKey:@"remote"];
             [dictionary setObject:[paymentPass primaryAccountNumberSuffix] forKey:@"cardSuffix"];
             [requiresActivationsCardsList addObject:dictionary];
@@ -224,7 +224,7 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
                 paymentPasses = [passLibrary remotePaymentPasses];
                 for (PKPass *pass in paymentPasses) {
                     PKPaymentPass * paymentPass = [pass paymentPass];
-                    if([paymentPass passActivationState] == PKSecureElementPassActivationStateRequiresActivation) {
+                    if([paymentPass activationState] == PKPaymentPassActivationStateRequiresActivation) {
                         [dictionary setValue:[NSNumber numberWithBool:1] forKey:@"remote"];
                         [dictionary setObject:[paymentPass primaryAccountNumberSuffix] forKey:@"cardSuffix"];
                         [requiresActivationsCardsList addObject:dictionary];
