@@ -182,12 +182,15 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
     
     PKPassLibrary *passLibrary = [[PKPassLibrary alloc] init];
     NSArray *paymentPasses = [[NSArray alloc] init];
+    NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
     if (@available(iOS 13.5, *)) { // PKPassTypePayment is deprecated in iOS13.5
       paymentPasses = [passLibrary passesOfType: PKPassTypeSecureElement];
       for (PKPass *pass in paymentPasses) {
         PKSecureElementPass *paymentPass = [pass secureElementPass];
         if ([paymentPass passActivationState] == PKSecureElementPassActivationStateRequiresActivation) {
-            [requiresActivationsCardsList addObject:[paymentPass primaryAccountNumberSuffix]];
+            [dictionary setValue:[NSNumber numberWithBool:0] forKey:@"remote"];
+            [dictionary setObject:[paymentPass primaryAccountNumberSuffix] forKey:@"cardSuffix"];
+            [requiresActivationsCardsList addObject:dictionary];
         }
       }
     } else {
@@ -195,8 +198,9 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
       for (PKPass *pass in paymentPasses) {
         PKPaymentPass *paymentPass = [pass paymentPass];
         if([paymentPass passActivationState] == PKSecureElementPassActivationStateRequiresActivation) {
-            [requiresActivationsCardsList addObject:[paymentPass primaryAccountNumberSuffix]];
-        }
+            [dictionary setValue:[NSNumber numberWithBool:0] forKey:@"remote"];
+            [dictionary setObject:[paymentPass primaryAccountNumberSuffix] forKey:@"cardSuffix"];
+            [requiresActivationsCardsList addObject:dictionary];
       }
     }
     
@@ -211,7 +215,9 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
                 paymentPasses = [passLibrary remoteSecureElementPasses]; // remotePaymentPasses is deprecated in iOS13.5
                 for (PKSecureElementPass *pass in paymentPasses) {
                     if ([pass passActivationState] == PKSecureElementPassActivationStateRequiresActivation) {
-                        [requiresActivationsCardsList addObject:[pass primaryAccountNumberSuffix]];
+                        [dictionary setValue:[NSNumber numberWithBool:1] forKey:@"remote"];
+                        [dictionary setObject:[paymentPass primaryAccountNumberSuffix] forKey:@"cardSuffix"];
+                        [requiresActivationsCardsList addObject:dictionary];
                     }
                 }
             } else {
@@ -219,7 +225,9 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
                 for (PKPass *pass in paymentPasses) {
                     PKPaymentPass * paymentPass = [pass paymentPass];
                     if([paymentPass passActivationState] == PKSecureElementPassActivationStateRequiresActivation) {
-                        [requiresActivationsCardsList addObject:[paymentPass primaryAccountNumberSuffix]];
+                        [dictionary setValue:[NSNumber numberWithBool:1] forKey:@"remote"];
+                        [dictionary setObject:[paymentPass primaryAccountNumberSuffix] forKey:@"cardSuffix"];
+                        [requiresActivationsCardsList addObject:dictionary];
                     }
                 }
             }

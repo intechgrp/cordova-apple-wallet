@@ -148,7 +148,7 @@ var AppleWallet = {
      * @description a function to determine if there is some card in requiresActivation status
      * @param {Function} [successCallback] - Optional success callback, recieves message object.
      * @param {Function} [errorCallback] - Optional error callback, recieves message object.
-     * @returns {Promise<string[]>} - Check if there is card in status requiresActivation for in app validation 
+     * @returns {Promise<Object[]>} - Check if there is card in status requiresActivation for In-App Verification
      */
     checkActivation: function(successCallback, errorCallback) {
         return new Promise(function(resolve, reject) {
