@@ -179,10 +179,9 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
 - (void) checkActivation:(CDVInvokedUrlCommand*)command {
 
     NSMutableArray *requiresActivationsCardsList = [NSMutableArray array];
-    
+    NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
     PKPassLibrary *passLibrary = [[PKPassLibrary alloc] init];
     NSArray *paymentPasses = [[NSArray alloc] init];
-    NSMutableDictionary* dictionary = [[NSMutableDictionary alloc] init];
     if (@available(iOS 13.5, *)) { // PKPassTypePayment is deprecated in iOS13.5
       paymentPasses = [passLibrary passesOfType: PKPassTypeSecureElement];
       for (PKPass *pass in paymentPasses) {
@@ -201,6 +200,7 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
             [dictionary setValue:[NSNumber numberWithBool:0] forKey:@"remote"];
             [dictionary setObject:[paymentPass primaryAccountNumberSuffix] forKey:@"cardSuffix"];
             [requiresActivationsCardsList addObject:dictionary];
+        }
       }
     }
     
@@ -216,7 +216,7 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
                 for (PKSecureElementPass *pass in paymentPasses) {
                     if ([pass passActivationState] == PKSecureElementPassActivationStateRequiresActivation) {
                         [dictionary setValue:[NSNumber numberWithBool:1] forKey:@"remote"];
-                        [dictionary setObject:[paymentPass primaryAccountNumberSuffix] forKey:@"cardSuffix"];
+                        [dictionary setObject:[pass primaryAccountNumberSuffix] forKey:@"cardSuffix"];
                         [requiresActivationsCardsList addObject:dictionary];
                     }
                 }
