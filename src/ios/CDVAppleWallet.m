@@ -652,7 +652,7 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
       for (PKPass *pass in paymentPasses) {
         PKSecureElementPass *paymentPass = [pass secureElementPass];
         if ([[paymentPass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
-            [[UIApplication sharedApplication] openURL:[paymentPass passURL] options:@{} completionHandler:nil];
+            [[UIApplication sharedApplication] openURL:[pass passURL] options:@{} completionHandler:nil];
         }
       }
     } else {
@@ -660,7 +660,7 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
       for (PKPass *pass in paymentPasses) {
         PKPaymentPass *paymentPass = [pass paymentPass];
         if([[paymentPass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
-            [[UIApplication sharedApplication] openURL:[paymentPass passURL] options:@{} completionHandler:nil];
+            [[UIApplication sharedApplication] openURL:[pass passURL] options:@{} completionHandler:nil];
         }
       }
     }
