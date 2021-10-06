@@ -1,4 +1,4 @@
-/**
+ /**
  * Created 8/8/2018
  * @author Hatem
  * @implementation {AppleWallet} file CDVAppleWallet
@@ -508,12 +508,13 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
 - (void) completeCardActivation:(CDVInvokedUrlCommand *)command {
     NSDictionary* options = [command.arguments objectAtIndex:0];
     NSString * cardSuffix = [options objectForKey:@"cardSuffix"];
-    NSData * activationData = [options objectForKey:@"activationData"];
+    NSString * activationDataTmp = [options objectForKey:@"activationData"];
+    NSData * activationData = [activationDataTmp dataUsingEncoding:NSUTF8StringEncoding];
     NSNumber * remote = [options objectForKey:@"remote"];
     
-    PKSecureElementPass * selectedCard;
-    PKPaymentPass * selectedCardOld;
     __block CDVPluginResult *pluginResult;
+    PKPassLibrary *passLibrary = [[PKPassLibrary alloc] init];
+    NSArray *paymentPasses = [[NSArray alloc] init];
     
     if ([PKPassLibrary isPassLibraryAvailable]) {
         NSLog(@"PkPassLibrary is available");
@@ -524,9 +525,9 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
         return;
     }
     
-    PKPassLibrary *passLibrary = [[PKPassLibrary alloc] init];
-
     if (@available(iOS 13.5, *)) {
+        PKSecureElementPass * selectedCard;
+        
         if ([passLibrary isSecureElementPassActivationAvailable]) {
             NSLog(@"PaymentPassActivationAvailable is available (ios13.5>)");
         } else {
@@ -535,20 +536,8 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             return;
         }
-    } else {
-        if ([passLibrary isPaymentPassActivationAvailable]) {
-            NSLog(@"PaymentPassActivationAvailable is available (ios13.5<)");
-        } else {
-            NSLog(@"PaymentPassActivationAvailable is NOT available (ios13.5<)");
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"PaymentPassActivationAvailable is NOT available (ios13.5<)"];
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-            return;
-        }
-    }
-    
-    NSArray *paymentPasses = [[NSArray alloc] init];
-    if (remote.intValue == 0) {
-        if (@available(iOS 13.5, *)) {
+        
+        if (remote.intValue == 0) {
             paymentPasses = [passLibrary passesOfType: PKPassTypeSecureElement];
             for (PKPass *pass in paymentPasses) {
                 PKSecureElementPass *paymentPass = [pass secureElementPass];
@@ -557,31 +546,65 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
                 }
             }
         } else {
-            paymentPasses = [passLibrary passesOfType: PKPassTypePayment];
-            for (PKPass *pass in paymentPasses) {
-            PKPaymentPass * paymentPass = [pass paymentPass];
-            if([[paymentPass primaryAccountNumberSuffix] isEqualToString:cardSuffix]){
-                selectedCardOld = paymentPass;
-            }
-            }
-        }
-    }
-
-    if (remote.intValue == 1) {
-        if (WCSession.isSupported) { // check if the device support to handle an Apple Watch
-            WCSession *session = [WCSession defaultSession];
-            [session setDelegate:self.appDelegate];
-            [session activateSession];
-            
-            if ([session isPaired]) { // Check if the iPhone is paired with the Apple Watch
-                if (@available(iOS 13.5, *)) { // remotePaymentPasses is deprecated in iOS 13.5
+            if (WCSession.isSupported) { // check if the device support to handle an Apple Watch
+                WCSession *session = [WCSession defaultSession];
+                [session setDelegate:self.appDelegate];
+                [session activateSession];
+                
+                if ([session isPaired]) { // Check if the iPhone is paired with the Apple Watch
                     paymentPasses = [passLibrary remoteSecureElementPasses];
                     for (PKSecureElementPass *pass in paymentPasses) {
                         if ([[pass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
                             selectedCard = pass;
                         }
                     }
-                } else {
+                }
+            }
+        }
+        
+        //If nil check is needed
+        if (selectedCard == nil) {
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error: selectedCard is nill"];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            return;
+        }
+        
+        [passLibrary activateSecureElementPass:selectedCard withActivationData:activationData completion:^(BOOL success, NSError * _Nullable error) {
+            if (success) {
+                pluginResult =[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"success"];
+            } else{
+                pluginResult =[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+            }
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        }];
+        
+    } else {
+        PKPaymentPass * selectedCardOld;
+        
+        if ([passLibrary isPaymentPassActivationAvailable]) {
+            NSLog(@"PaymentPassActivationAvailable is available (ios13.5<)");
+        } else {
+            NSLog(@"PaymentPassActivationAvailable is NOT available (ios13.5<)");
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"PaymentPassActivationAvailable is NOT available (ios13.5<)"];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            return;
+        }
+        
+        if (remote.intValue == 0) {
+            paymentPasses = [passLibrary passesOfType: PKPassTypePayment];
+            for (PKPass *pass in paymentPasses) {
+                PKPaymentPass * paymentPass = [pass paymentPass];
+                if([[paymentPass primaryAccountNumberSuffix] isEqualToString:cardSuffix]){
+                    selectedCardOld = paymentPass;
+                }
+            }
+        } else {
+            if (WCSession.isSupported) { // check if the device support to handle an Apple Watch
+                WCSession *session = [WCSession defaultSession];
+                [session setDelegate:self.appDelegate];
+                [session activateSession];
+                
+                if ([session isPaired]) { // Check if the iPhone is paired with the Apple Watch
                     paymentPasses = [passLibrary remotePaymentPasses];
                     for (PKPass *pass in paymentPasses) {
                         PKPaymentPass * paymentPass = [pass paymentPass];
@@ -592,41 +615,23 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
                 }
             }
         }
-    }
-    
-    //If nil check is needed
-    if (@available(iOS 13.5, *)) {
-        if (selectedCard == nil) {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error: selectedCard is nill"];
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-            return;
-        }
-    } else {
+        
+        //If nil check is needed
         if (selectedCardOld == nil) {
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error: selectedCard is nill"];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             return;
         }
-    }
-    
-    if (@available(iOS 13.5, *)) { // PKPassTypePayment is deprecated in iOS 13.5
-        [passLibrary activateSecureElementPass:selectedCard withActivationData:activationData completion:^(BOOL success, NSError * _Nullable error) {
-            if (success) {
-                pluginResult =[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"success"];
-            } else{
-                pluginResult =[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error"];
-            }
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-        }];
-    } else {
+        
         [passLibrary activatePaymentPass:selectedCardOld withActivationData:activationData completion:^(BOOL success, NSError * _Nonnull error) {
             if (success) {
                 pluginResult =[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"success"];
             } else{
-                pluginResult =[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error"];
+                pluginResult =[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
             }
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }];
+        
     }
 }
 
