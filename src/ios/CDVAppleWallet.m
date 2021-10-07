@@ -693,7 +693,7 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
         }
       }
 
-      if (WCSession.isSupported) { // check if the device support to handle an Apple Watch
+      if (WCSession.isSupported && !foundedInWallet) { // check if the device support to handle an Apple Watch
         WCSession *session = [WCSession defaultSession];
         [session setDelegate:self.appDelegate];
         [session activateSession];
