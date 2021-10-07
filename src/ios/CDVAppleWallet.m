@@ -654,6 +654,7 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
 
 - (void) openWalletOnPassBySuffix:(CDVInvokedUrlCommand *)command {
     NSString * cardSuffix = [command.arguments objectAtIndex:0];
+    Boolean foundedInWallet = false; // if the card is in both of the iPhone Wallet and Apple Watch Wallet : it's the iPhone Wallet that open
 
     PKPassLibrary *passLibrary = [[PKPassLibrary alloc] init];
     NSArray *paymentPasses = [[NSArray alloc] init];
@@ -662,15 +663,49 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
       for (PKPass *pass in paymentPasses) {
         PKSecureElementPass *paymentPass = [pass secureElementPass];
         if ([[paymentPass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
+            foundedInWallet = true;
             [[UIApplication sharedApplication] openURL:[pass passURL] options:[[NSDictionary alloc] init] completionHandler:nil];
         }
       }
+
+      if (WCSession.isSupported && !foundedInWallet) { // check if the device support to handle an Apple Watch
+        WCSession *session = [WCSession defaultSession];
+        [session setDelegate:self.appDelegate];
+        [session activateSession];
+                
+        if ([session isPaired]) { // Check if the iPhone is paired with the Apple Watch
+            paymentPasses = [passLibrary remoteSecureElementPasses];
+            for (PKSecureElementPass *pass in paymentPasses) {
+                if ([[pass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
+                    [[UIApplication sharedApplication] openURL:[pass passURL] options:[[NSDictionary alloc] init] completionHandler:nil];
+                }
+            }
+        }
+      }
+      
     } else {
       paymentPasses = [passLibrary passesOfType: PKPassTypePayment];
       for (PKPass *pass in paymentPasses) {
         PKPaymentPass *paymentPass = [pass paymentPass];
         if([[paymentPass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
+            foundedInWallet = true;
             [[UIApplication sharedApplication] openURL:[pass passURL] options:[[NSDictionary alloc] init] completionHandler:nil];
+        }
+      }
+
+      if (WCSession.isSupported) { // check if the device support to handle an Apple Watch
+        WCSession *session = [WCSession defaultSession];
+        [session setDelegate:self.appDelegate];
+        [session activateSession];
+                
+        if ([session isPaired]) { // Check if the iPhone is paired with the Apple Watch
+            paymentPasses = [passLibrary remotePaymentPasses];
+            for (PKPass *pass in paymentPasses) {
+                PKPaymentPass * paymentPass = [pass paymentPass];
+                if([[paymentPass primaryAccountNumberSuffix] isEqualToString:cardSuffix]) {
+                    [[UIApplication sharedApplication] openURL:[pass passURL] options:[[NSDictionary alloc] init] completionHandler:nil];
+                }
+            }
         }
       }
     }
