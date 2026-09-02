@@ -411,13 +411,27 @@ typedef void (^completedPaymentProcessHandler)(PKAddPaymentPassRequest *request)
           didFinishAddingPaymentPass:(PKPaymentPass *)pass
                                error:(NSError *)error
 {
-    NSLog(@"didFinishAddingPaymentPass");
-    [controller dismissViewControllerAnimated:YES completion:nil];
     if (error != nil){
+        NSLog(@"========== ERROR COMPLETE PASS ==========");
+        NSLog(@"Error object: %@", error);
+        NSLog(@"Error domain: %@", error.domain);
+        NSLog(@"Error code: %ld", (long)error.code);
+        NSLog(@"Error description: %@", error.localizedDescription);
+        NSLog(@"Error userInfo: %@", error.userInfo);
+        NSLog(@"====================================");
+
         self.isRequestIssuedSuccess = NO;
+
         [self completeAddPaymentPass:nil];
-    }else{
+
+    } else {
+
+        NSLog(@"========== COMPLETE PASS SUCCESS ==========");
+        NSLog(@"Pass: %@", pass);
+        NSLog(@"======================================");
+
         self.isRequestIssuedSuccess = YES;
+
         [self completeAddPaymentPass:nil];
     }
 }
